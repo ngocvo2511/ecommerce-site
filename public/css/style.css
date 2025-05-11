@@ -1,0 +1,61 @@
+/* Các định dạng chung */
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
+}
+
+footer {
+    margin-top: auto;
+}
+
+/* Sidebar của trang quản trị */
+@media (min-width: 768px) {
+    .sidebar {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+    }
+}
+
+.sidebar .nav-link {
+    color: #333;
+}
+
+.sidebar .nav-link.active {
+    color: #0d6efd;
+    font-weight: bold;
+}
+
+/* Card sản phẩm */
+.card-img-top {
+    height: 200px;
+    object-fit: cover;
+}
+
+/* Form đăng nhập và đăng ký */
+.login-form, .register-form {
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+/* Định dạng cho thanh tìm kiếm */
+.search-form {
+    max-width: 500px;
+}
+
+/* Định dạng cho giỏ hàng */
+.cart-item-img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+}
+
+/* Định dạng cho trang chi tiết sản phẩm */
+.product-image {
+    max-height: 400px;
+    object-fit: contain

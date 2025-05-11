@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thanh toán | Cửa hàng trực tuyến</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">Cửa hàng trực tuyến</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Trang chủ</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/products.html">Sản phẩm</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item" id="admin-link" style="display: none;">
+                        <a class="nav-link" href="/admin/dashboard.html">Quản trị</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/cart.html">
+                            Giỏ hàng <span class="badge bg-primary" id="cart-count">0</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" id="login-link">
+                        <a class="nav-link" href="/login.html">Đăng nhập</a>
+                    </li>
+                    <li class="nav-item" id="register-link">
+                        <a class="nav-link" href="/register.html">Đăng ký</a>
+                    </li>
+                    <li class="nav-item" id="user-dropdown" style="display: none;">
+                        <div class="dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="user-menu" role="button" data-bs-toggle="dropdown">
+                                <span id="username">User</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="#" id="logout-btn">Đăng xuất</a></li>
+                            </ul>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h1 class="mb-4">Thanh toán</h1>
+        
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Thông tin đơn hàng</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="cart-summary">
+                            <div class="text-center">
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">Đang tải...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Thông tin giao hàng</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="checkout-form">
+                            <div class="alert alert-danger" id="checkout-error" style="display: none;"></div>
+                            
+                            <div class="mb-3">
+                                <label for="fullname" class="form-label">Họ tên người nhận</label>
+                                <input type="text" class="form-control" id="fullname" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="phone" class="form-label">Số điện thoại</label>
+                                <input type="tel" class="form-control" id="phone" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="address" class="form-label">Địa chỉ giao hàng</label>
+                                <textarea class="form-control" id="address" rows="3" required></textarea>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="note" class="form-label">Ghi chú (không bắt buộc)</label>
+                                <textarea class="form-control" id="note" rows="2"></textarea>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-success btn-lg w-100">Đặt hàng</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Tóm tắt đơn hàng</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="order-summary">
+                            <div class="text-center">
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">Đang tải...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-white mt-5 py-3">
+        <div class="container text-center">
+            <p>&copy; 2025 Cửa hàng trực tuyến. Bảo lưu mọi quyền.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/cart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuth();
+            
+            // Kiểm tra đăng nhập
+            if (!isLoggedIn()) {
+                window.location.href = '/login.html';
+                return;
+            }
+            
+            // Tải thông tin giỏ hàng
+            loadCartSummary();
+            
+            // Xử lý form thanh toán
+            const checkoutForm = document.getElementById('checkout-form');
+            checkoutForm.addEventListener('submit', processCheckout);
+        });
+
+        async function loadCartSummary() {
+            try {
+                const response = await fetch('/api/cart');
+                const cartItems = await response.json();
+                
+                if (cartItems.length === 0) {
+                    window.location.href = '/cart.html';
+                    return;
+                }
+                
+                let totalPrice = 0;
+                
+                // Hiển thị danh sách sản phẩm
+                const cartSummary = document.getElementById('cart-summary');
+                cartSummary.innerHTML = `
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Sản phẩm</th>
+                                    <th class="text-end">Số lượng</th>
+                                    <th class="text-end">Giá</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${cartItems.map(item => {
+                                    const product = item.Product;
+                                    const itemTotal = product.price * item.quantity;
+                                    totalPrice += itemTotal;
+                                    
+                                    return `
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <img src="${product.image || 'https://via.placeholder.com/40'}" alt="${product.name}" class="img-thumbnail me-2" style="width: 40px;">
+                                                    ${product.name}
+                                                </div>
+                                            </td>
+                                            <td class="text-end">${item.quantity}</td>
+                                            <td class="text-end">${formatCurrency(itemTotal)}</td>
+                                        </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+                
+                // Hiển thị tóm tắt đơn hàng
+                const orderSummary = document.getElementById('order-summary');
+                orderSummary.innerHTML = `
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Tổng tiền hàng:</span>
+                            <span>${formatCurrency(totalPrice)}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Phí vận chuyển:</span>
+                            <span>Miễn phí</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between fw-bold">
+                            <span>Tổng thanh toán:</span>
+                            <span>${formatCurrency(totalPrice)}</span>
+                        </li>
+                    </ul>
+                    <div class="mt-3">
+                        <a href="/cart.html" class="btn btn-outline-primary w-100">
+                            <i class="bi bi-arrow-left"></i> Quay lại giỏ hàng
+                        </a>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Lỗi khi tải thông tin giỏ hàng:', error);
+                document.getElementById('cart-summary').innerHTML = '<div class="alert alert-danger">Không thể tải thông tin giỏ hàng. Vui lòng thử lại sau.</div>';
+                document.getElementById('order-summary').innerHTML = '<div class="alert alert-danger">Không thể tải thông tin đơn hàng.</div>';
+            }
+        }
+
+        async function processCheckout(e) {
+            e.preventDefault();
+            
+            const fullname = document.getElementById('fullname').value;
+            const phone = document.getElementById('phone').value;
+            const address = document.getElementById('address').value;
+            const note = document.getElementById('note').value;
+            
+            const checkoutError = document.getElementById('checkout-error');
+            checkoutError.style.display = 'none';
+            
+            if (!fullname || !phone || !address) {
+                checkoutError.textContent = 'Vui lòng điền đầy đủ thông tin giao hàng';
+                checkoutError.style.display = 'block';
+                return;
+            }
+            
+            try {
+                // Thực hiện đặt hàng
+                const fullAddress = `${address} (${fullname}, ${phone})` + (note ? ` - Ghi chú: ${note}` : '');
+                
+                const orderData = await checkout(fullAddress, phone);
+                
+                // Hiển thị thông báo đặt hàng thành công
+                alert(`Đặt hàng thành công! Mã đơn hàng: ${orderData.order.id}`);
+                
+                // Chuyển hướng về trang chủ
+                window.location.href = '/';
+            } catch (error) {
+                console.error('Lỗi khi đặt hàng:', error);
+                checkoutError.textContent = error.message || 'Đã có lỗi xảy ra khi đặt hàng';
+                checkoutError.style.display = 'block';
+            }
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+        }
+    </script>
+</body>
+</html>

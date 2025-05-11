@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bảng điều khiển | Quản trị</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">Cửa hàng trực tuyến</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Trang chủ</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/products.html">Sản phẩm</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/admin/dashboard.html">Quản trị</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/cart.html">
+                            Giỏ hàng <span class="badge bg-primary" id="cart-count">0</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" id="user-dropdown">
+                        <div class="dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="user-menu" role="button" data-bs-toggle="dropdown">
+                                <span id="username">Admin</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="#" id="logout-btn">Đăng xuất</a></li>
+                            </ul>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block bg-light sidebar py-3">
+                <div class="position-sticky">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="/admin/dashboard.html">
+                                <i class="bi bi-speedometer2 me-2"></i>
+                                Bảng điều khiển
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/admin/products.html">
+                                <i class="bi bi-box me-2"></i>
+                                Quản lý sản phẩm
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/admin/orders.html">
+                                <i class="bi bi-cart-check me-2"></i>
+                                Quản lý đơn hàng
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Main content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">Bảng điều khiển</h1>
+                </div>
+
+                <div class="row" id="admin-summary">
+                    <div class="text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Đang tải...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <h2 class="mt-5 mb-3">Đơn hàng gần đây</h2>
+                <div class="table-responsive">
+                    <table class="table table-striped table-sm">
+                        <thead>
+                            <tr>
+                                <th>Mã đơn hàng</th>
+                                <th>Khách hàng</th>
+                                <th>Tổng tiền</th>
+                                <th>Trạng thái</th>
+                                <th>Ngày đặt</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recent-orders">
+                            <tr>
+                                <td colspan="6" class="text-center">Đang tải dữ liệu...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/admin.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Kiểm tra quyền admin
+            checkAdminAuth();
+            
+            loadDashboardData();
+        });
+
+        async function loadDashboardData() {
+            try {
+                // Tải thống kê tổng quan
+                await loadSummary();
+                
+                // Tải đơn hàng gần đây
+                await loadRecentOrders();
+            } catch (error) {
+                console.error('Lỗi khi tải dữ liệu bảng điều khiển:', error);
+            }
+        }
+
+        async function loadSummary() {
+            try {
+                // Lấy số lượng sản phẩm
+                const productsResponse = await fetch('/api/admin/products');
+                const products = await productsResponse.json();
+                
+                // Lấy đơn hàng
+                const ordersResponse = await fetch('/api/admin/orders');
+                const orders = await ordersResponse.json();
+                
+                // Tính toán thống kê
+                const totalProducts = products.length;
+                const totalOrders = orders.length;
+                const pendingOrders = orders.filter(order => order.status === 'pending').length;
+                
+                // Tính tổng doanh thu
+                const revenue = orders
+                    .filter(order => order.status !== 'cancelled')
+                    .reduce((total, order) => total + parseFloat(order.total), 0);
+                
+                // Hiển thị thống kê
+                const summaryContainer = document.getElementById('admin-summary');
+                summaryContainer.innerHTML = `
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card border-left-primary shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                            Tổng sản phẩm</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">${totalProducts}</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="bi bi-box fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card border-left-success shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                            Tổng doanh thu</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">${formatCurrency(revenue)}</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="bi bi-currency-dollar fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card border-left-info shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                            Tổng đơn hàng</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">${totalOrders}</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="bi bi-cart fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card border-left-warning shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                            Đơn hàng chờ xử lý</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">${pendingOrders}</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="bi bi-clock-history fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Lỗi khi tải thống kê:', error);
+                document.getElementById('admin-summary').innerHTML = '<div class="col-12 text-center text-danger">Không thể tải thống kê. Vui lòng thử lại sau.</div>';
+            }
+        }
+
+        async function loadRecentOrders() {
+            try {
+                const response = await fetch('/api/admin/orders');
+                const orders = await response.json();
+                
+                const recentOrdersContainer = document.getElementById('recent-orders');
+                
+                if (orders.length === 0) {
+                    recentOrdersContainer.innerHTML = '<tr><td colspan="6" class="text-center">Chưa có đơn hàng nào</td></tr>';
+                    return;
+                }
+                
+                // Lấy 5 đơn hàng gần nhất
+                const recentOrders = orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5);
+                
+                recentOrdersContainer.innerHTML = recentOrders.map(order => {
+                    const statusBadge = getStatusBadge(order.status);
+                    const orderDate = new Date(order.createdAt).toLocaleDateString('vi-VN');
+                    
+                    return `
+                        <tr>
+                            <td>#${order.id}</td>
+                            <td>${order.User ? order.User.name : 'N/A'}</td>
+                            <td>${formatCurrency(order.total)}</td>
+                            <td>${statusBadge}</td>
+                            <td>${orderDate}</td>
+                            <td>
+                                <a href="/admin/orders.html?id=${order.id}" class="btn btn-sm btn-primary">
+                                    <i class="bi bi-eye"></i> Xem
+                                </a>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('Lỗi khi tải đơn hàng gần đây:', error);
+                document.getElementById('recent-orders').innerHTML = '<tr><td colspan="6" class="text-center text-danger">Không thể tải đơn hàng. Vui lòng thử lại sau.</td></tr>';
+            }
+        }
+
+        function getStatusBadge(status) {
+            const statusMap = {
+                'pending': '<span class="badge bg-warning">Chờ xử lý</span>',
+                'processing': '<span class="badge bg-info">Đang xử lý</span>',
+                'shipped': '<span class="badge bg-primary">Đã giao hàng</span>',
+                'delivered': '<span class="badge bg-success">Đã nhận hàng</span>',
+                'cancelled': '<span class="badge bg-danger">Đã hủy</span>'
+            };
+            
+            return statusMap[status] || `<span class="badge bg-secondary">${status}</span>`;
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+        }
+    </script>
+</body>
+</html>
